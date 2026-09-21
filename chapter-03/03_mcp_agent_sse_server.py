@@ -1,0 +1,34 @@
+import asyncio
+from pathlib import Path
+
+from agents import Agent, Runner
+from agents.extensions.models.litellm_model import LitellmModel
+from agents.mcp import MCPServerStdio, MCPServerStdioParams, MCPServerSse
+from dotenv import load_dotenv
+
+load_dotenv()
+
+SCRIPT = Path(__file__).with_name("01_claude_mcp_server.py").resolve()
+
+
+async def main():
+    async with MCPServerSse(
+            name="Research Tools",
+            params={
+                "url": "http://localhost:8000/sse",
+            }
+    ) as research_server:
+        agent = Agent(
+            name="Assistant",
+            instructions="Use the research tools to perform research.",
+            model=LitellmModel(model="anthropic/claude-haiku-4-5"),
+            mcp_servers=[research_server],
+        )
+
+        print("Running: Get the available research sources")
+        result = await Runner.run(agent, "Get the available research sources")
+        print(result.final_output)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
