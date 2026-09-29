@@ -11,6 +11,7 @@ from agents import (
     handoff,
     output_guardrail,
 )
+from agents.extensions.models.litellm_model import LitellmModel
 from agents.mcp import MCPServerStdio, MCPServerStdioParams
 from pydantic import BaseModel
 
@@ -71,6 +72,7 @@ async def main():
     # Instantiate the agents first…
     research_agent = Agent(
         name="Research Agent",
+        model=LitellmModel(model="anthropic/claude-haiku-4-5"),
         output_type=ResearchSourcesModel,
         instructions="""
 You are a research assistant.
@@ -81,6 +83,7 @@ Always hand off to the thinking agent.
     )
     thinking_agent = Agent(
         name="Thinking Agent",
+        model=LitellmModel(model="anthropic/claude-haiku-4-5"),
         instructions="""
 You are a research planning assistant.
 Your role is to plan the research.
@@ -93,6 +96,7 @@ Always hand off to the filesystem agent.
     )
     filesystem_agent = Agent(
         name="Filesystem Agent",
+        model=LitellmModel(model="anthropic/claude-haiku-4-5"),
         instructions="""
 You are a filesystem assistant.
 Your role is to write the output as a text file.

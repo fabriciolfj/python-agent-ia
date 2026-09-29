@@ -13,6 +13,7 @@ from agents import (
     input_guardrail,
     output_guardrail,
 )
+from agents.extensions.models.litellm_model import LitellmModel
 from agents.mcp import MCPServerStdio, MCPServerStdioParams
 from pydantic import BaseModel
 
@@ -42,6 +43,7 @@ class ResearchInputModel(BaseModel):
 
 input_guardrail_agent = Agent(
     name="Input Guardrail Agent",
+    model=LitellmModel(model="anthropic/claude-haiku-4-5"),
     instructions="""
 You are an input guardrail agent.
 Make sure the research is not about the following topics:
@@ -64,6 +66,7 @@ async def research_guardrail(
 
 output_guardrail_agent = Agent(
     name="Output Guardrail Agent",
+    model=LitellmModel(model="anthropic/claude-haiku-4-5"),
     instructions="""
 You are an output guardrail agent.
 Make sure the research plan is sufficiently detailed.
@@ -128,6 +131,7 @@ Finally, use the filesystem tool to write the research plan as a text file.
             mcp_servers=[research_srv, thinking_srv, fs_srv],
             output_type=ResearchOutputModel,
             input_guardrails=[research_guardrail],
+            model=LitellmModel(model="anthropic/claude-haiku-4-5"),
             output_guardrails=[research_output_guardrail],
         )
         goal = """

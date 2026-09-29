@@ -13,6 +13,7 @@ from agents import (
     input_guardrail,
     output_guardrail,
 )
+from agents.extensions.models.litellm_model import LitellmModel
 from agents.mcp import MCPServerStdio, MCPServerStdioParams
 from pydantic import BaseModel
 
@@ -105,6 +106,7 @@ Finally, use the filesystem tool to write the research plan as a text file.
             mcp_servers=[research_srv, thinking_srv, fs_srv],
             output_type=ResearchOutputModel,
             input_guardrails=[research_guardrail],
+            model=LitellmModel(model="anthropic/claude-haiku-4-5"),
             output_guardrails=[research_output_guardrail],
         )
         goal = """

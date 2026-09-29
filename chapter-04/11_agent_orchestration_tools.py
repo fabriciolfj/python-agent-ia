@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import List
 
 from agents import Agent, Runner, function_tool
+from agents.extensions.models.litellm_model import LitellmModel
 from agents.mcp import MCPServerStdio, MCPServerStdioParams
 from pydantic import BaseModel
 
@@ -45,6 +46,7 @@ async def research_agent(instructions: str) -> ResearchSourcesModel:
     """
     agent = Agent(
         name="Research Agent",
+        model=LitellmModel(model="anthropic/claude-haiku-4-5"),
         instructions="""
 You are a research assistant.
 Your role is to find research sources.
@@ -65,6 +67,7 @@ async def filesystem_agent(instructions: str) -> str:
     """
     agent = Agent(
         name="Filesystem Agent",
+        model=LitellmModel(model="anthropic/claude-haiku-4-5"),
         instructions="""
 You are a filesystem assistant.
 Your role is to read and write files.
@@ -79,6 +82,7 @@ Never make up or invent any ouput.
 
 orchestration_agent = Agent(
     name="Orchestration Agent",
+    model=LitellmModel(model="anthropic/claude-haiku-4-5"),
     instructions="""
 You are a research planning and orchestration assistant.
 Your role is to plan the research, find existing research already done and update it.
