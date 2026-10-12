@@ -4,13 +4,14 @@ from pathlib import Path
 import chromadb
 import tiktoken
 from agents import Agent, Runner, function_tool  # OpenAI Agents SDK
+from agents.extensions.models.litellm_model import LitellmModel
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
+# Carrega as variáveis de ambiente do arquivo .env
 load_dotenv()
 
 # ------------------------------------------------------------------
-# 1. Load + chunk the script
+# 1. Carrega o roteiro e divide em pedaços (chunks)
 # ------------------------------------------------------------------
 script_text = Path("chapter_06/sample_documents/back_to_the_future.txt").read_text(
     encoding="utf-8"
@@ -34,56 +35,59 @@ def simple_chunk(text, max_tokens=200):
 docs = simple_chunk(script_text, max_tokens=200)
 
 # ------------------------------------------------------------------
-# 2. Create (or connect to) a Chroma collection with OpenAI embeddings
+# 2. Cria (ou conecta a) uma coleção do Chroma com a função de embedding padrão
 # ------------------------------------------------------------------
 client = chromadb.PersistentClient(
-    path="./chapter_06/chroma_script_store"  # on-disk so we reuse later
+    path="./chapter_06/chroma_script_store"  # em disco, para reutilizar depois
 )
 collection_name = "bttf_script"
 
-# Try to get existing collection first
+# Tenta obter a coleção existente primeiro
 try:
     collection = client.get_collection(collection_name)
 except Exception:
-    # Collection doesn't exist, create it without embedding function
+    # A coleção não existe, cria sem especificar função de embedding
     collection = client.create_collection(name=collection_name)
 
-# Populate once (skip if already populated)
+# Popula apenas uma vez (pula se já estiver populada)
 if collection.count() == 0:
     collection.add(ids=[str(uuid.uuid4()) for _ in docs], documents=docs)
 
 
 # ------------------------------------------------------------------
-# 3. Define a semantic search tool that queries Chroma
+# 3. Define uma ferramenta de busca semântica que consulta o Chroma
 # ------------------------------------------------------------------
 @function_tool
 def search_script(query: str, top_k: int = 3) -> str:
     res = collection.query(query_texts=[query], n_results=top_k)
     if res and "documents" in res and res["documents"] and res["documents"][0]:
-        return "\n\n".join(res["documents"][0])  # combine best chunks
-    return "No relevant documents found."
+        return "\n\n".join(res["documents"][0])  # junta os melhores trechos
+    return "Nenhum documento relevante encontrado."
 
 
 # ------------------------------------------------------------------
-# 4. Build the agent
+# 4. Monta o agente
 # ------------------------------------------------------------------
 agent = Agent(
-    name="Script Agent",
+    name="Agente do Roteiro",
+    model=LitellmModel(model="anthropic/claude-haiku-4-5"),
     instructions=(
-        "You answer questions about the movie *Back to the Future*.\n"
-        "When needed, call the `search_script` tool to fetch passages, "
-        "then cite or paraphrase them in your answer."
+        "Você responde perguntas sobre o filme *De Volta para o Futuro*.\n"
+        "Quando necessário, chame a ferramenta `search_script` para buscar trechos, "
+        "depois cite ou parafraseie esses trechos na sua resposta.\n"
+        "O roteiro está em inglês, então faça as buscas em inglês, "
+        "mas responda sempre em português."
     ),
     tools=[search_script],
 )
 
 # ------------------------------------------------------------------
-# 5. Ask a question
+# 5. Faz as perguntas
 # ------------------------------------------------------------------
-query = "Where does Doc tell Marty to meet him, and at what time?"
+query = "Onde o Doc diz para o Marty encontrá-lo, e a que horas?"
 result = Runner.run_sync(agent, query)
-print("\n--- ANSWER ---\n", result.final_output)
+print("\n--- RESPOSTA ---\n", result.final_output)
 
-query = "What happens at 1:15AM"
+query = "O que acontece à 1:15 da manhã?"
 result = Runner.run_sync(agent, query)
-print("\n--- ANSWER ---\n", result.final_output)
+print("\n--- RESPOSTA ---\n", result.final_output)
