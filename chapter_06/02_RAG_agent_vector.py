@@ -3,12 +3,15 @@ from pathlib import Path
 
 import chromadb
 import tiktoken
-from agents import Agent, Runner, function_tool  # OpenAI Agents SDK
+from agents import Agent, Runner, function_tool, set_tracing_disabled  # OpenAI Agents SDK
 from agents.extensions.models.litellm_model import LitellmModel
 from dotenv import load_dotenv
 
 # Carrega as variáveis de ambiente do arquivo .env
 load_dotenv()
+
+# Desativa o tracing (ele envia dados para a OpenAI e exige OPENAI_API_KEY)
+set_tracing_disabled(True)
 
 # ------------------------------------------------------------------
 # 1. Carrega o roteiro e divide em pedaços (chunks)
@@ -76,7 +79,9 @@ agent = Agent(
         "Quando necessário, chame a ferramenta `search_script` para buscar trechos, "
         "depois cite ou parafraseie esses trechos na sua resposta.\n"
         "O roteiro está em inglês, então faça as buscas em inglês, "
-        "mas responda sempre em português."
+        "mas responda sempre em português.\n"
+        "Faça no máximo 3 buscas. Se os trechos não trouxerem a resposta, "
+        "diga que ela não foi encontrada no roteiro em vez de continuar buscando."
     ),
     tools=[search_script],
 )
