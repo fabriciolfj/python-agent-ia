@@ -1,50 +1,51 @@
 import asyncio
 
 from agents import Agent, Runner, function_tool
+from agents.extensions.models.litellm_model import LitellmModel
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
+# Carrega as variáveis de ambiente do arquivo .env
 load_dotenv()
 
-# Simple in‑memory knowledge base
+# Base de conhecimento simples em memória
 _special_knowledge_db = [
-    "Nebula Forge engine spins antimatter rings for gravity control.",
-    "Solaris Glacier absorbs heat, releasing luminescent icefire at dusk.",
-    "Quantum Bark trees emit entangled photons guiding nocturnal insect migrations.",
-    "Aether Silk fabric self-weaves repairs within fourteen-millisecond microtears.",
-    "Chrono Coral reefs rewind water currents three minutes every solstice.",
+    "O motor Nebula Forge gira anéis de antimatéria para controlar a gravidade.",
+    "A Geleira Solaris absorve calor, liberando fogo-gelo luminescente ao entardecer.",
+    "As árvores Quantum Bark emitem fótons emaranhados que guiam migrações noturnas de insetos.",
+    "O tecido Aether Silk se autorrepara, costurando microrrasgos em catorze milissegundos.",
+    "Os recifes Chrono Coral rebobinam as correntes de água três minutos a cada solstício.",
 ]
 
-# benchmarks for special knowledge
+# Benchmarks para o conhecimento especial
 _benchmarks = [
-    {"q": "Nebula Forge engine spins what?", "a": "antimatter", "wrong": "fusion"},
+    {"q": "O motor Nebula Forge gira o quê?", "a": "antimatéria", "wrong": "fusão"},
     {
-        "q": "Solaris Glacier releases luminescent what?",
-        "a": "icefire",
+        "q": "A Geleira Solaris libera o quê luminescente?",
+        "a": "fogo-gelo",
         "wrong": "lava",
     },
-    {"q": "Quantum Bark trees emit what?", "a": "photons", "wrong": "spores"},
-    {"q": "Aether Silk fabric repairs what?", "a": "microtears", "wrong": "threads"},
-    {"q": "Chrono Coral reefs rewind what?", "a": "currents", "wrong": "tides"},
+    {"q": "As árvores Quantum Bark emitem o quê?", "a": "fótons", "wrong": "esporos"},
+    {"q": "O tecido Aether Silk repara o quê?", "a": "microrrasgos", "wrong": "fios"},
+    {"q": "Os recifes Chrono Coral rebobinam o quê?", "a": "correntes", "wrong": "marés"},
 ]
 
 
 @function_tool
 def search_knowledge(query: str) -> dict:
-    """Search the knowledge database for relevant facts."""
+    """Pesquisa fatos relevantes na base de conhecimento."""
     matches = [doc for doc in _special_knowledge_db if query.lower() in doc.lower()]
-    print(f"Found {len(matches)} matches for '{query}'")
+    print(f"Encontradas {len(matches)} correspondências para '{query}'")
     return {"status": "ok", "context": "\n".join(matches)}
 
 
 agent = Agent(
-    name="RAG Agent",
-
+    name="Agente RAG",
+    model=LitellmModel(model="anthropic/claude-haiku-4-5"),
     instructions="""
-You are a retrieval-augmented knowledge agent.
-Break down the user's query into smaller parts if needed
-to fetch relevant context for the user's query.
-Always answer with a single word.
+Você é um agente de conhecimento aumentado por recuperação (RAG).
+Divida a consulta do usuário em partes menores, se necessário,
+para buscar o contexto relevante para a consulta do usuário.
+Sempre responda com uma única palavra.
 """,
     tools=[search_knowledge],
 )
@@ -55,11 +56,11 @@ for benchmark in _benchmarks:
     wrong_answer = benchmark["wrong"]
     result = asyncio.run(Runner.run(agent, input=question)).final_output.strip()
     print("" + "=" * 40)
-    print(f"Question: {question}")
-    print(f"Answer: {result}")
+    print(f"Pergunta: {question}")
+    print(f"Resposta: {result}")
     if result.lower() == answer.lower():
-        print(f"Correct -> {answer}")
+        print(f"Correta -> {answer}")
     else:
-        print(f"Incorrect -> Expected: {answer}")
+        print(f"Incorreta -> Esperado: {answer}")
         if wrong_answer:
-            print(f"Wrong answer was: {wrong_answer}")
+            print(f"A resposta errada era: {wrong_answer}")

@@ -1,18 +1,20 @@
 import asyncio
+from pathlib import Path
 
 from agents import Agent, Runner
+from agents.extensions.models.litellm_model import LitellmModel
 from agents.mcp import MCPServerStdio
 
 # ──────────────────────────────────────────────────────────────
-# 1  JSON “memory blocks” we want the agent to execute
+# 1  “Blocos de memória” em JSON que queremos que o agente execute
 # ──────────────────────────────────────────────────────────────
 memories = [
-    # ---------- ENTITIES -------------------------------------------------
+    # ---------- ENTIDADES ------------------------------------------------
     {
         "name": "create_entities",
         "arguments": {
             "entities": [
-                #  people
+                #  pessoas
                 {"name": "Marty McFly", "entityType": "Person", "observations": []},
                 {
                     "name": "Professor Emmett Brown",
@@ -39,7 +41,7 @@ memories = [
                     "entityType": "Person",
                     "observations": [],
                 },
-                #  places / item
+                #  lugares / item
                 {
                     "name": "Orpheum Theatre Building",
                     "entityType": "Location",
@@ -56,7 +58,7 @@ memories = [
             ]
         },
     },
-    # ---------- RELATIONS -----------------------------------------------
+    # ---------- RELAÇÕES -------------------------------------------------
     {
         "name": "create_relations",
         "arguments": {
@@ -110,7 +112,7 @@ memories = [
             ]
         },
     },
-    # ---------- OBSERVATIONS --------------------------------------------
+    # ---------- OBSERVAÇÕES ----------------------------------------------
     {
         "name": "add_observations",
         "arguments": {
@@ -118,22 +120,22 @@ memories = [
                 {
                     "entityName": "Power Converter",
                     "contents": [
-                        "Marty accidentally pours Coca-Cola into the 30-year-old Power Converter, "
-                        "causing a huge voltage spike that convinces Brown the formula works."
+                        "Marty derrama Coca-Cola sem querer no Power Converter de 30 anos, "
+                        "causando um enorme pico de tensão que convence Brown de que a fórmula funciona."
                     ],
                 },
                 {
                     "entityName": "Hill Valley High School",
                     "contents": [
-                        "Mr. Arky scolds Marty for expressing curiosity about an atomic blast "
-                        "while Suzy passes Marty a flirtatious note."
+                        "Mr. Arky repreende Marty por demonstrar curiosidade sobre uma explosão atômica "
+                        "enquanto Suzy passa um bilhete de paquera para Marty."
                     ],
                 },
                 {
                     "entityName": "George McFly",
                     "contents": [
-                        "Biff barges into the McFly kitchen and humiliates George over a burned drill "
-                        "while Eileen and Marty watch."
+                        "Biff invade a cozinha dos McFly e humilha George por causa de uma furadeira queimada "
+                        "enquanto Eileen e Marty assistem."
                     ],
                 },
             ]
@@ -142,17 +144,17 @@ memories = [
 ]
 
 # ──────────────────────────────────────────────────────────────
-# 2  Minimal agent instructions
-#    Every user message *is* a JSON tool payload – just forward it.
+# 2  Instruções mínimas do agente
+#    Toda mensagem do usuário *é* um payload JSON de ferramenta – basta repassá-lo.
 # ──────────────────────────────────────────────────────────────
 instructions = """
-You are a seeding agent.  
-Every user message will already be a JSON object with keys `name` and `arguments`.  
+Você é um agente de povoamento de memória.
+Toda mensagem do usuário já será um objeto JSON com as chaves `name` e `arguments`.
 
-Steps:
-1. Treat `name` as the exact MCP tool to call.
-2. Invoke that tool with `arguments` (wrapped as `input_json=`).
-3. Do **not** chat or explain – simply return the tool result.
+Passos:
+1. Trate `name` como o nome exato da ferramenta MCP a ser chamada.
+2. Chame essa ferramenta com `arguments` (encapsulado como `input_json=`).
+3. **Não** converse nem explique – apenas retorne o resultado da ferramenta.
 """
 
 
@@ -165,20 +167,22 @@ async def main() -> None:
         params={
             "command": "npx",
             "args": ["-y", "@modelcontextprotocol/server-memory@latest"],
+            "env": {"MEMORY_FILE_PATH": str(Path(__file__).parent / "memory.jsonl")},
         },
     )
 
     async with memory_srv:
         agent = Agent(
-            name="Seed Memory Agent",
+            model=LitellmModel(model="anthropic/claude-haiku-4-5"),
+            name="Agente de Povoamento de Memória",
             instructions=instructions,
             mcp_servers=[memory_srv],
         )
 
         for payload in memories:
-            # Each payload goes in as a user message (Runner.run handles wrapping)
+            # Cada payload entra como mensagem do usuário (o Runner.run cuida do encapsulamento)
             resp = await Runner.run(agent, str(payload))
-            print(resp)  # optional: see server acknowledgement
+            print(resp)  # opcional: ver a confirmação do servidor
 
 
 if __name__ == "__main__":

@@ -1,6 +1,8 @@
 import asyncio
+from pathlib import Path
 
 from agents import Agent, Runner
+from agents.extensions.models.litellm_model import LitellmModel
 from agents.mcp import MCPServerStdio
 
 
@@ -11,6 +13,7 @@ async def main():
         params={
             "command": "npx",
             "args": ["-y", "@modelcontextprotocol/server-memory@latest"],
+            "env": {"MEMORY_FILE_PATH": str(Path(__file__).parent / "memory.jsonl")},
         },
     )
 
@@ -45,6 +48,7 @@ Follow these steps for each interaction:
     async with memory_srv:
         agent = Agent(
             name="Memory Agent",
+            model=LitellmModel(model="anthropic/claude-haiku-4-5"),
             instructions=instructions,
             mcp_servers=[memory_srv],
         )

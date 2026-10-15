@@ -1,4 +1,5 @@
 import asyncio
+from pathlib import Path
 
 from agents import Agent, Runner
 from agents.mcp import MCPServerStdio
@@ -10,6 +11,7 @@ async def main():
         params={
             "command": "npx",
             "args": ["-y", "@modelcontextprotocol/server-memory@latest"],
+            "env": {"MEMORY_FILE_PATH": str(Path(__file__).parent / "memory.jsonl")},
         },
     )
     chroma_srv = MCPServerStdio(
