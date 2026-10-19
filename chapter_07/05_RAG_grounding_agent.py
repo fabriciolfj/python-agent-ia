@@ -1,46 +1,47 @@
 import asyncio
 
 from agents import Agent, Runner, function_tool
+from agents.extensions.models.litellm_model import LitellmModel
 from dotenv import load_dotenv
 from pydantic import BaseModel
 
-# Load environment variables from .env file
+# Carrega as variáveis de ambiente do arquivo .env
 load_dotenv()
 
-# Simple in‑memory knowledge base
+# Base de conhecimento simples em memória
 _special_knowledge_db = [
-    "Nebula Forge engine spins antimatter rings for gravity control.",
-    "Solaris Glacier absorbs heat, releasing luminescent icefire at dusk.",
-    "Quantum Bark trees emit entangled photons guiding nocturnal insect migrations.",
-    "Aether Silk fabric self-weaves repairs within fourteen-millisecond microtears.",
-    "Chrono Coral reefs rewind water currents three minutes every solstice.",
+    "O motor Nebula Forge gira anéis de antimatéria para controlar a gravidade.",
+    "O Solaris Glacier absorve calor, liberando fogo-gelo luminescente ao entardecer.",
+    "As árvores Quantum Bark emitem fótons emaranhados que guiam migrações noturnas de insetos.",
+    "O tecido Aether Silk se autotece, reparando microrrasgos em catorze milissegundos.",
+    "Os recifes Chrono Coral rebobinam as correntes de água por três minutos a cada solstício.",
 ]
 
-# benchmarks for special knowledge
+# benchmarks para o conhecimento especial
 _benchmarks = [
-    {"q": "Nebula Forge engine spins what?", "a": "antimatter", "wrong": "fusion"},
+    {"q": "O motor Nebula Forge gira o quê?", "a": "antimatéria", "wrong": "fusão"},
     {
-        "q": "Solaris Glacier releases luminescent what?",
-        "a": "icefire",
+        "q": "O Solaris Glacier libera o que luminescente?",
+        "a": "fogo-gelo",
         "wrong": "lava",
     },
-    {"q": "Quantum Bark trees emit what?", "a": "photons", "wrong": "spores"},
-    {"q": "Aether Silk fabric repairs what?", "a": "microtears", "wrong": "threads"},
-    {"q": "Chrono Coral reefs rewind what?", "a": "currents", "wrong": "tides"},
+    {"q": "As árvores Quantum Bark emitem o quê?", "a": "fótons", "wrong": "esporos"},
+    {"q": "O tecido Aether Silk repara o quê?", "a": "microrrasgos", "wrong": "fios"},
+    {"q": "Os recifes Chrono Coral rebobinam o quê?", "a": "correntes", "wrong": "marés"},
 ]
 
-_last_context = ""  # Global variable to store the last context
+_last_context = ""  # Variável global para armazenar o último contexto
 
 
 @function_tool
 def search_knowledge_by_keyword(query: str) -> dict:
     """
-    Search the knowledge database for relevant facts.
-    param query: The single keyword query string to search for.
+    Busca fatos relevantes na base de conhecimento.
+    param query: A palavra-chave única a ser buscada.
     """
     global _last_context
     matches = [doc for doc in _special_knowledge_db if query.lower() in doc.lower()]
-    print(f"Found {len(matches)} matches for '{query}'")
+    print(f"Encontrados {len(matches)} resultados para '{query}'")
     _last_context = "\n".join(matches)
     return {"status": "ok", "context": _last_context}
 
@@ -48,28 +49,29 @@ def search_knowledge_by_keyword(query: str) -> dict:
 agent = Agent(
     name="RAG Agent",
     instructions="""
-You are a retrieval-augmented knowledge agent.
-Break down the user's query into smaller parts if needed
-to fetch relevant context for the user's query.
+Você é um agente de conhecimento aumentado por recuperação (RAG).
+Divida a consulta do usuário em partes menores, se necessário,
+para buscar o contexto relevante para a consulta do usuário.
+Responda sempre em português.
 """,
     tools=[search_knowledge_by_keyword],
-    model="gpt-4o",  # Specify the model to use
+    model=LitellmModel(model="anthropic/claude-haiku-4-5"),
 )
 
 
 @function_tool
 def get_last_context() -> str:
     """
-    Retrieve the last context used by the grounding agent.
+    Recupera o último contexto usado pelo agente de grounding.
     """
     global _last_context
     if not _last_context:
-        return "No context available."
+        return "Nenhum contexto disponível."
     return _last_context
 
 
 class GroundedAnswer(BaseModel):
-    """Output model for grounding agent."""
+    """Modelo de saída do agente de grounding."""
 
     is_answer_grounded: bool
     feedback: str
@@ -78,12 +80,13 @@ class GroundedAnswer(BaseModel):
 grounding_agent = Agent(
     name="Grounding Agent",
     instructions="""
-You are a grounding agent.
-Your task is to evaluate the correctness of answers
-based on the provided question, context used,
-and output answer.
+Você é um agente de grounding (verificação de fundamentação).
+Sua tarefa é avaliar a correção das respostas
+com base na pergunta fornecida, no contexto utilizado
+e na resposta gerada.
+Escreva o feedback em português.
 """,
-    model="gpt-4o",  # Specify the model to use
+    model=LitellmModel(model="anthropic/claude-haiku-4-5"),
     output_type=GroundedAnswer,
     tools=[get_last_context],
 )
@@ -95,14 +98,14 @@ for benchmark in _benchmarks:
     wrong_answer = benchmark["wrong"]
     result = asyncio.run(Runner.run(agent, input=question)).final_output.strip()
     grounding_input = dict(
-        question=question,
-        answer=result,
+        pergunta=question,
+        resposta=result,
     )
     print("" + "=" * 40)
     grounding = asyncio.run(
         Runner.run(grounding_agent, input=str(grounding_input))
     ).final_output
-    print(f"Grounded: {grounding.is_answer_grounded}")
+    print(f"Fundamentada: {grounding.is_answer_grounded}")
     print(f"Feedback: {grounding.feedback}")
-    print(f"Question: {question}")
-    print(f"Answer: {result}")
+    print(f"Pergunta: {question}")
+    print(f"Resposta: {result}")

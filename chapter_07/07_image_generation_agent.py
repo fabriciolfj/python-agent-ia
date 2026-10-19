@@ -5,6 +5,7 @@ import subprocess
 import sys
 
 from agents import Agent, ImageGenerationTool, Runner, trace
+from agents.extensions.models.litellm_model import LitellmModel
 
 
 def open_file(path: str) -> None:
@@ -15,24 +16,25 @@ def open_file(path: str) -> None:
     elif os.name == "posix":
         subprocess.run(["xdg-open", path], check=False)  # Linux/Unix
     else:
-        print(f"Don't know how to open files on this platform: {sys.platform}")
+        print(f"Não sei como abrir arquivos nesta plataforma: {sys.platform}")
 
 
 async def main():
     agent = Agent(
         name="Image generator",
-        instructions="""
-## Style Guidelines for All Images:
+        model=LitellmModel(model="anthropic/claude-haiku-4-5"),
+        instructions=""",
+## Diretrizes de Estilo para Todas as Imagens:
 
-- **Consistency**: Each image should maintain the same photographic quality with 3D-rendered elements seamlessly integrated
-- **Color Palette**: Use a consistent scheme of blues, purples, warm golds, and greens with pops of bright accent colors
-- **Lighting**: Professional photography lighting with dramatic but warm tones
-- **Infographics**: Semi-transparent holographic projections that don't overwhelm the main subjects
-- **Characters**: AI robots should be cute, approachable, and distinctly different from each other while maintaining a family resemblance
-- **Icons**: Use universally recognizable symbols (lightbulbs for ideas, gears for processing, hearts for alignment, etc.)
-- **Mood**: Optimistic, educational, and slightly futuristic without being cold or intimidating
+- **Consistência**: Cada imagem deve manter a mesma qualidade fotográfica, com elementos renderizados em 3D integrados de forma natural
+- **Paleta de Cores**: Use um esquema consistente de azuis, roxos, dourados quentes e verdes, com toques de cores vibrantes de destaque
+- **Iluminação**: Iluminação de fotografia profissional, com tons dramáticos, porém quentes
+- **Infográficos**: Projeções holográficas semitransparentes que não sobrecarreguem os elementos principais
+- **Personagens**: Os robôs de IA devem ser fofos, acessíveis e claramente diferentes entre si, mantendo uma semelhança de família
+- **Ícones**: Use símbolos universalmente reconhecíveis (lâmpadas para ideias, engrenagens para processamento, corações para alinhamento etc.)
+- **Clima**: Otimista, educativo e levemente futurista, sem ser frio ou intimidador
+- Responda sempre em português.
 """,
-        model="gpt-5-mini",
         tools=[
             ImageGenerationTool(
                 tool_config={
@@ -45,10 +47,10 @@ async def main():
         ],
     )
 
-    image_description = "an agent generating an image"
+    image_description = "um agente gerando uma imagem"
     image_name = "agent_image_generation"
 
-    with trace("Image generation"):
+    with trace("Geração de imagem"):
         result = await Runner.run(agent, image_description)
         print(result.final_output)
         for item in result.new_items:

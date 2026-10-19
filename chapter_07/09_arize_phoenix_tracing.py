@@ -3,6 +3,7 @@
 import os
 
 from agents import Agent, Runner, trace
+from agents.extensions.models.litellm_model import LitellmModel
 
 os.environ["PHOENIX_COLLECTOR_ENDPOINT"] = "http://localhost:6006"
 
@@ -16,7 +17,8 @@ tracer_provider = register(
     auto_instrument=True,  # Auto-instrument your app based on installed dependencies
 )
 
-agent = Agent(name="Assistant", instructions="You are a helpful assistant")
+agent = Agent(name="Assistant", instructions="You are a helpful assistant",
+              model=LitellmModel(model="anthropic/claude-haiku-4-5"),)
 
 
 async def main():
