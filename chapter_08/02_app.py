@@ -3,6 +3,7 @@ import base64
 
 # Agents SDK (matches your example import path)
 from agents import Agent, ImageGenerationTool, Runner, trace
+from agents.extensions.models.litellm_model import LitellmModel
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -61,7 +62,7 @@ def build_agent() -> Agent:
     return Agent(
         name="Image generator",
         instructions=STYLE_GUIDELINES,
-        model=CONTROLLER_MODEL,
+        model=LitellmModel(model="anthropic/claude-haiku-4-5"),
         tools=[ImageGenerationTool(tool_config=TOOL_CONFIG)],
     )
 
