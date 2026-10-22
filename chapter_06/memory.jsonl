@@ -1,0 +1,25 @@
+{"type":"entity","name":"Marty McFly","entityType":"Person","observations":[]}
+{"type":"entity","name":"Professor Emmett Brown","entityType":"Person","observations":[]}
+{"type":"entity","name":"George McFly","entityType":"Person","observations":["Biff barges into the McFly kitchen and humiliates George over a burned drill while Eileen and Marty watch.","Biff invade a cozinha dos McFly e humilha George por causa de uma furadeira queimada enquanto Eileen e Marty assistem."]}
+{"type":"entity","name":"Eileen McFly (née Baines)","entityType":"Person","observations":[]}
+{"type":"entity","name":"Suzy Parker","entityType":"Person","observations":[]}
+{"type":"entity","name":"Biff Tannen","entityType":"Person","observations":[]}
+{"type":"entity","name":"Mr. Arky","entityType":"Person","observations":[]}
+{"type":"entity","name":"Reginald Washington","entityType":"Person","observations":[]}
+{"type":"entity","name":"Dick Wilson","entityType":"Person","observations":[]}
+{"type":"entity","name":"Shemp (organ-grinder monkey)","entityType":"Person","observations":[]}
+{"type":"entity","name":"Orpheum Theatre Building","entityType":"Location","observations":[]}
+{"type":"entity","name":"Brown's Lab","entityType":"Location","observations":[]}
+{"type":"entity","name":"Wilson's Café","entityType":"Location","observations":[]}
+{"type":"entity","name":"Hill Valley High School","entityType":"Location","observations":["Mr. Arky scolds Marty for expressing curiosity about an atomic blast while Suzy passes Marty a flirtatious note.","Mr. Arky repreende Marty por demonstrar curiosidade sobre uma explosão atômica enquanto Suzy passa um bilhete de paquera para Marty."]}
+{"type":"entity","name":"Power Converter","entityType":"Item","observations":["Marty accidentally pours Coca-Cola into the 30-year-old Power Converter, causing a huge voltage spike that convinces Brown the formula works.","Marty derrama Coca-Cola sem querer no Power Converter de 30 anos, causando um enorme pico de tensão que convence Brown de que a fórmula funciona."]}
+{"type":"relation","from":"Marty McFly","to":"George McFly","relationType":"child_of"}
+{"type":"relation","from":"Marty McFly","to":"Eileen McFly (née Baines)","relationType":"child_of"}
+{"type":"relation","from":"Marty McFly","to":"Mr. Arky","relationType":"student_of"}
+{"type":"relation","from":"Marty McFly","to":"Professor Emmett Brown","relationType":"mentored_by"}
+{"type":"relation","from":"Professor Emmett Brown","to":"Brown's Lab","relationType":"owns_lab"}
+{"type":"relation","from":"George McFly","to":"Eileen McFly (née Baines)","relationType":"married_to"}
+{"type":"relation","from":"Biff Tannen","to":"George McFly","relationType":"bullies"}
+{"type":"relation","from":"Reginald Washington","to":"Marty McFly","relationType":"represents"}
+{"type":"relation","from":"Power Converter","to":"Professor Emmett Brown","relationType":"invented_by"}
+{"type":"relation","from":"Brown's Lab","to":"Orpheum Theatre Building","relationType":"located_in"}
